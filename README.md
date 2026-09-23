@@ -8,6 +8,9 @@ A local, privacy-first computer-vision assistant that analyzes head, neck, trunk
 
 
 ![PostureAI Demo](assets/demo.gif)
+
+
+## Demo Video
 🎥 [Watch the PostureAI demo video](assets/postureai_demo.mp4)
 
 ## Screenshots
