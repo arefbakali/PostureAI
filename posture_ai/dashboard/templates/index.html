@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>PostureAI — Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0c10; --panel:#15161c; --panel2:#1c1e26; --text:#eef0f4;
+    --muted:#9398a6; --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --accent:#60a5fa; --accent2:#c084fc; --border:#252732;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:
+      radial-gradient(circle at 15% -10%, #1a1f33 0%, transparent 45%),
+      radial-gradient(circle at 100% 0%, #241833 0%, transparent 40%),
+      var(--bg);
+    color:var(--text); font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding:36px 44px 56px;
+  }
+  .topbar{display:flex; align-items:baseline; gap:10px; margin-bottom:2px;}
+  h1{font-size:22px; margin:0; font-weight:700; letter-spacing:0.2px;}
+  .tagline{color:var(--muted); font-size:13px; margin-bottom:26px;}
+  .live-pill{
+    display:none; align-items:center; gap:6px; background:#2a1414; color:var(--bad);
+    border:1px solid #4d2323; padding:3px 11px; border-radius:999px; font-size:11.5px;
+    font-weight:600; letter-spacing:0.3px;
+  }
+  .live-dot{width:6px; height:6px; border-radius:50%; background:var(--bad); animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%{opacity:1;}50%{opacity:0.25;}100%{opacity:1;}}
+
+  .grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:18px;}
+  .card{
+    background:linear-gradient(160deg, var(--panel2), var(--panel));
+    border:1px solid var(--border); border-radius:14px; padding:18px 20px;
+    box-shadow:0 4px 18px rgba(0,0,0,0.28);
+  }
+  .card .label{color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:0.7px; font-weight:600;}
+  .card .value{font-size:29px; font-weight:700; margin-top:8px; letter-spacing:-0.5px;}
+  .card .delta{font-size:12.5px; margin-top:7px;}
+  .delta.up{color:var(--good);} .delta.down{color:var(--bad);} .delta.flat{color:var(--muted);}
+
+  .row{display:grid; grid-template-columns:1.5fr 1fr; gap:16px; margin-bottom:16px;}
+  .panel-title{font-size:14px; font-weight:600; margin-bottom:4px; color:var(--text);}
+  .panel-sub{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .chart-img{width:100%; height:auto; display:block; border-radius:8px;}
+  .donut-img{max-width:280px; margin:0 auto; display:block;}
+
+  .advice{
+    background:#1a1420; border:1px solid #3a2a46; border-radius:12px; padding:14px 16px;
+    margin-top:10px;
+  }
+  .advice b{color:var(--accent2); font-size:13px;}
+  .advice ul{margin:8px 0 0 18px; padding:0; color:var(--muted); font-size:12.5px; line-height:1.5;}
+  .no-advice{color:var(--muted); font-size:13px; margin-top:10px;}
+
+  .goal-bar-bg{width:100%; height:9px; background:#262832; border-radius:6px; overflow:hidden; margin-top:10px;}
+  .goal-bar-fill{height:100%; background:linear-gradient(90deg, var(--good), var(--accent)); transition:width 0.4s;}
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .badge{
+    background:#1c1e26; border:1px solid var(--border); border-radius:9px; padding:6px 12px; font-size:12px;
+  }
+  .best-session{font-size:13px; color:var(--muted); line-height:1.6;}
+  .best-session b{color:var(--text);}
+
+  .footer-note{color:var(--muted); font-size:11.5px; margin-top:26px; text-align:center; opacity:0.7;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>PostureAI</h1>
+    <span class="live-pill" id="livePill"><span class="live-dot"></span>EN DIRECT</span>
+  </div>
+  <div class="tagline">Suivi du jour — bien-être &amp; ergonomie au poste de travail.</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label">Score du jour</div>
+      <div class="value" id="todayScore">—</div>
+      <div class="delta" id="deltaYesterday">vs hier : —</div>
+    </div>
+    <div class="card">
+      <div class="label">Bonne posture aujourd'hui</div>
+      <div class="value" id="todayGood">—</div>
+      <div class="delta flat" id="todayDuration">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Alertes aujourd'hui</div>
+      <div class="value" id="todayAlerts">—</div>
+      <div class="delta flat">notifications envoyées</div>
+    </div>
+    <div class="card">
+      <div class="label">Streak de jours</div>
+      <div class="value" id="streakDays">—</div>
+      <div class="delta flat">jours consécutifs avec suivi</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="panel-title">Évolution du score — aujourd'hui</div>
+      <div class="panel-sub">Chaque point est une mesure réelle de la webcam, coloré selon le statut du moment.</div>
+      <img class="chart-img" id="evolutionImg" src="/api/today_evolution.png" alt="Évolution du score aujourd'hui">
+    </div>
+    <div class="card">
+      <div class="panel-title">Répartition de la journée</div>
+      <div class="panel-sub">Bonne / Limite / Mauvaise, sur l'ensemble des mesures d'aujourd'hui.</div>
+      <img class="chart-img donut-img" id="donutImg" src="/api/today_donut.png" alt="Répartition de la journée">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="panel-title">Objectif quotidien</div>
+      <div class="panel-sub">Temps cumulé en bonne posture aujourd'hui.</div>
+      <div class="value" id="goalValue" style="font-size:22px;">—</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="goalBar" style="width:0%"></div></div>
+      <div class="badge-row" id="badgeRow"></div>
+    </div>
+    <div class="card">
+      <div class="panel-title">Conseil du jour</div>
+      <div id="adviceZone">
+        <div class="no-advice">Pas assez de données pour un conseil personnalisé pour l'instant.</div>
+      </div>
+      <div class="best-session" id="bestSession" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Toutes les données restent stockées localement (SQLite) sur cette machine. Aucune image ni vidéo n'est enregistrée.
+  </div>
+
+<script>
+async function fetchJSON(url){ const r = await fetch(url); return r.json(); }
+
+function fmtDelta(cur, prev){
+  if(cur === null || prev === null || prev === undefined) return {text:'—', cls:'flat'};
+  const diff = cur - prev;
+  if(Math.abs(diff) < 0.5) return {text:`stable (${cur})`, cls:'flat'};
+  const cls = diff > 0 ? 'up' : 'down';
+  const arrow = diff > 0 ? '▲' : '▼';
+  return {text:`${arrow} ${Math.abs(diff).toFixed(1)} pts vs hier`, cls};
+}
+
+async function loadSummary(){
+  const s = await fetchJSON('/api/summary');
+  document.getElementById('todayScore').textContent = s.today_score !== null ? s.today_score : '—';
+  document.getElementById('todayGood').textContent = s.today_good_pct !== null ? s.today_good_pct + '%' : '—';
+  document.getElementById('todayAlerts').textContent = s.today_alerts;
+  document.getElementById('todayDuration').textContent = s.today_duration_min + " min de suivi aujourd'hui";
+  document.getElementById('streakDays').textContent = s.streak_days;
+  document.getElementById('livePill').style.display = s.live_session ? 'inline-flex' : 'none';
+
+  const dy = fmtDelta(s.today_score, s.yesterday_score);
+  const el1 = document.getElementById('deltaYesterday');
+  el1.textContent = dy.text === '—' ? 'vs hier : —' : dy.text;
+  el1.className = 'delta ' + dy.cls;
+
+  const goalPct = Math.min(100, Math.round(100 * s.good_minutes_today / s.daily_goal_minutes));
+  document.getElementById('goalValue').textContent = `${s.good_minutes_today} / ${s.daily_goal_minutes} min`;
+  document.getElementById('goalBar').style.width = goalPct + '%';
+
+  const badgeRow = document.getElementById('badgeRow');
+  badgeRow.innerHTML = '';
+  if(s.streak_days >= 3) badgeRow.innerHTML += `<div class="badge">🔥 ${s.streak_days} jours de suite</div>`;
+  if(s.today_good_pct !== null && s.today_good_pct >= 80) badgeRow.innerHTML += `<div class="badge">⭐ Journée exemplaire</div>`;
+
+  const adviceZone = document.getElementById('adviceZone');
+  if(s.advice){
+    adviceZone.innerHTML = `<div class="advice"><b>${s.advice.issue}</b><ul>${
+      s.advice.tips.map(t => `<li>${t}</li>`).join('')
+    }</ul></div>`;
+  } else {
+    adviceZone.innerHTML = `<div class="no-advice">Rien à signaler aujourd'hui — continue comme ça !</div>`;
+  }
+
+  const bestEl = document.getElementById('bestSession');
+  if(s.best_session){
+    bestEl.innerHTML = `Meilleure session du jour : <b>${s.best_session.avg_score}/100</b> · ${s.best_session.duration_min} min`;
+  } else {
+    bestEl.innerHTML = '';
+  }
+}
+
+let _timelineChart = null;
+function refreshCharts(){
+  // Les graphiques sont des images PNG générées côté serveur (matplotlib) —
+  // pas de dépendance à une librairie JS externe. On force juste le
+  // navigateur à recharger l'image (au lieu d'utiliser sa version en cache)
+  // via un paramètre d'URL qui change à chaque appel.
+  const t = Date.now();
+  document.getElementById('evolutionImg').src = `/api/today_evolution.png?t=${t}`;
+  document.getElementById('donutImg').src = `/api/today_donut.png?t=${t}`;
+}
+
+loadSummary();
+refreshCharts();
+setInterval(loadSummary, 4000);
+setInterval(refreshCharts, 6000);
+</script>
+</body>
+</html>

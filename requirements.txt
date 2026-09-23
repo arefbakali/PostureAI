@@ -1,0 +1,31 @@
+# PostureAI V2 — dépendances
+# Python 3.11 recommandé (Windows)
+
+opencv-python==4.10.0.84
+mediapipe==0.10.14
+numpy==1.26.4
+
+# Dashboard local (Flask, serveur lecture seule sur 127.0.0.1)
+flask==3.0.3
+
+# Icône system tray (Pause / Reprendre / Quitter) + rendu du texte à
+# l'écran (accents/UTF-8 corrects, contrairement à cv2.putText) et
+# icônes vectorielles de l'interface caméra.
+pystray==0.19.5
+Pillow==10.4.0
+
+# Notifications Windows natives (toast). Se dégrade proprement (no-op)
+# si indisponible sur la machine cible.
+plyer==2.1.0
+
+# NOTE : 'simpleaudio' a été retiré (source d'échecs d'installation sur
+# certaines configurations Windows / Python récents). Le son d'alerte
+# utilise désormais 'winsound', un module natif de Python sous Windows
+# (aucune dépendance supplémentaire nécessaire).
+
+# REQUIS : génère les graphiques du dashboard (courbe du score du jour +
+# anneau de répartition) directement en PNG, côté serveur. Ce choix évite
+# toute dépendance à un CDN JavaScript externe (qui peut être bloqué par
+# un pare-feu ou une machine sans connexion) — le dashboard fonctionne
+# donc entièrement hors ligne.
+matplotlib==3.9.2
