@@ -380,8 +380,16 @@ For detailed calibration instructions, posture-scoring methodology, phone-camera
 
 [`GUIDE.md`](GUIDE.md)
 
+## Contact
+
+- **GitHub:** https://github.com/arefbakali
+- **LinkedIn:** https://www.linkedin.com/in/aref-bak-ali/
+- **Email:** aref.bak-ali@dauphine.eu
+- **Portfolio:** https://portfolio-aref.vercel.app/
+
 ## Author
 
 **Aref Bak Ali**  
 AI, Data Science & Agentic AI Student  
-GitHub: https://github.com/arefbakali
+Université Paris Dauphine-PSL
+
